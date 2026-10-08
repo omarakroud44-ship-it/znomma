@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>❤️❤️Zineb ❤️❤️Anniversaire</title>
+<style>
+:root{--bg:#fff4f7;--fg:#3a1f2b;--accent:#e8487a;--card:#ffffff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1117;--fg:#fbe6ee;--card:#2b1923}}
+:root[data-theme="dark"]{--bg:#1d1117;--fg:#fbe6ee;--card:#2b1923}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:8px;user-select:none;-webkit-user-select:none}
+#wrap{position:relative;width:min(100%,400px);aspect-ratio:2/3;max-height:calc(100vh - 90px)}
+canvas{width:100%;height:100%;border-radius:18px;box-shadow:0 8px 30px rgba(232,72,122,.35);touch-action:manipulation;display:block}
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:20px;border-radius:18px;background:rgba(255,244,247,.88);color:#3a1f2b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .overlay{background:rgba(29,17,23,.88);color:#fbe6ee}}
+:root[data-theme="dark"] .overlay{background:rgba(29,17,23,.88);color:#fbe6ee}
+.hidden{display:none!important}
+h1{margin:0;font-size:1.7rem;color:var(--accent)}
+p{margin:0}
+input[type=text]{padding:10px 12px;border-radius:10px;border:2px solid var(--accent);font-size:1rem;width:80%;background:var(--card);color:var(--fg);text-align:center}
+button,label.btn{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:12px 22px;font-size:1.05rem;font-weight:600;cursor:pointer}
+label.btn.alt{background:transparent;color:var(--accent);border:2px solid var(--accent);padding:8px 16px;font-size:.95rem}
+#preview{width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);background:var(--card)}
+small{opacity:.7}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c" width="400" height="600"></canvas>
+
+  <div id="start" class="overlay">
+    <h1>🎂 zineeeb Anniversaire</h1>
+    <p>Pour Zineb ❤️</p>
+    <button id="play">Jouer</button>
+    <small>Clique, touche l'écran ou appuie sur Espace pour voler</small>
+  </div>
+
+  <div id="over" class="overlay hidden">
+    <h1 id="overTitle">Perdu !</h1>
+    <p id="overScore"></p>
+    <p id="overMsg"></p>
+    <button id="retry">Rejouer</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var cv=document.getElementById('c'),ctx=cv.getContext('2d');
+  var W=400,H=600,GROUND=60,R=24,GAP=160,PIPE_W=64,SPEED=2.4,GRAV=0.42,JUMP=-7.2;
+  var startEl=document.getElementById('start'),overEl=document.getElementById('over');
+    var face=null,state='ready',y,vy,pipes,score,frame,best=0,bday=0,lastT=0;
+
+  try{best=parseInt(localStorage.getItem('flappy_best')||'0',10)||0}catch(e){}
+
+  // Visage par défaut : emoji dessiné
+  function defaultFace(){
+    var c=document.createElement('canvas');c.width=c.height=128;var g=c.getContext('2d');
+    g.fillStyle='#ffd9a8';g.beginPath();g.arc(64,64,62,0,7);g.fill();
+    g.font='84px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('😊',64,70);
+    return c;
+  }
+  face=defaultFace();
+
+  // === PHOTO : mets ton image dans le même dossier que ce fichier et appelle-la zineb.jpg ===
+  var PHOTO='zineb.png';
+  var img=new Image();
+  img.onload=function(){
+    var sz=Math.min(img.width,img.height),c=document.createElement('canvas');c.width=c.height=160;
+    c.getContext('2d').drawImage(img,(img.width-sz)/2,(img.height-sz)/2,sz,sz,0,0,160,160);
+    face=c;
+  };
+  img.src=PHOTO;
+
+  function name(){return 'Zineb'}
+
+  function reset(){
+    y=H/2-40;vy=0;pipes=[];score=0;frame=0;bday=0;
+    pipes.push(newPipe(W+80));
+  }
+  function newPipe(x){
+    var min=70,max=H-GROUND-GAP-70;
+    return {x:x,top:min+Math.random()*(max-min),passed:false};
+  }
+
+  function flap(){
+    if(state==='ready'){return}
+    if(state==='play'){vy=JUMP}
+  }
+  function begin(){
+    startEl.classList.add('hidden');overEl.classList.add('hidden');
+    reset();state='play';vy=JUMP;lastT=0;
+  }
+  function die(){
+    state='dead';
+    if(score>best){best=score;try{localStorage.setItem('flappy_best',String(best))}catch(e){}}
+    document.getElementById('overTitle').textContent=score>=10?'Bravo '+name()+' ! 🎉':'Perdu !';
+    document.getElementById('overScore').textContent='Score : '+score+'  ·  Record : '+best;
+    document.getElementById('overMsg').textContent=score>=10
+      ?'Joyeux anniversaire '+name()+' ❤️ Tu es la meilleure !'
+      :'Atteins 10 points pour débloquer ton message d\'anniversaire 🎁';
+    setTimeout(function(){overEl.classList.remove('hidden')},500);
+  }
+
+  document.getElementById('play').addEventListener('click',begin);
+  document.getElementById('retry').addEventListener('click',begin);
+  window.addEventListener('keydown',function(e){
+    if(e.code==='Space'){
+      if(e.target&&e.target.tagName==='INPUT')return;
+      e.preventDefault();
+      if(state==='play')flap();
+      else if(state==='dead'&&!overEl.classList.contains('hidden'))begin();
+    }
+  });
+  cv.addEventListener('pointerdown',function(e){e.preventDefault();flap()});
+
+  function update(k){
+    frame++;
+    vy+=GRAV*k;y+=vy*k;
+    for(var i=0;i<pipes.length;i++){
+      var p=pipes[i];p.x-=SPEED*k;
+      if(!p.passed&&p.x+PIPE_W<W/2-R){p.passed=true;score++;if(score===10)bday=180}
+      var cx=W/2;
+      if(cx+R-6>p.x&&cx-R+6<p.x+PIPE_W){
+        if(y-R+6<p.top||y+R-6>p.top+GAP){die();return}
+      }
+    }
+    if(pipes[pipes.length-1].x<W-210)pipes.push(newPipe(W+10));
+    if(pipes[0].x<-PIPE_W)pipes.shift();
+    if(y+R>H-GROUND||y-R<-40){die();return}
+    if(bday>0)bday--;
+  }
+
+  function drawPipe(x,top){
+    var g=ctx.createLinearGradient(x,0,x+PIPE_W,0);
+    g.addColorStop(0,'#f06fa0');g.addColorStop(.5,'#ff9ec0');g.addColorStop(1,'#e8487a');
+    ctx.fillStyle=g;
+    ctx.fillRect(x,0,PIPE_W,top);
+    ctx.fillRect(x,top+GAP,PIPE_W,H-GROUND-top-GAP);
+    ctx.fillStyle='#c93566';
+    ctx.fillRect(x-4,top-24,PIPE_W+8,24);
+    ctx.fillRect(x-4,top+GAP,PIPE_W+8,24);
+  }
+
+  function draw(){
+    var sky=ctx.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0,'#ffd6e4');sky.addColorStop(1,'#fff1d9');
+    ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+    // nuages simples
+    ctx.fillStyle='rgba(255,255,255,.7)';
+    for(var i=0;i<3;i++){
+      var cx=((i*180-frame*0.3)%(W+120)+W+120)%(W+120)-60,cy=90+i*70;
+      ctx.beginPath();ctx.arc(cx,cy,22,0,7);ctx.arc(cx+24,cy+6,18,0,7);ctx.arc(cx-22,cy+8,16,0,7);ctx.fill();
+    }
+    if(pipes)pipes.forEach(function(p){drawPipe(p.x,p.top)});
+    // sol
+    ctx.fillStyle='#d9a066';ctx.fillRect(0,H-GROUND,W,GROUND);
+    ctx.fillStyle='#8fd18a';ctx.fillRect(0,H-GROUND,W,12);
+    // visage
+    var yy=(state==='ready'||y===undefined)?H/2-40+Math.sin(Date.now()/250)*8:y;
+    var rot=state==='play'||state==='dead'?Math.max(-.5,Math.min(.9,vy*.06)):0;
+    ctx.save();ctx.translate(W/2,yy);ctx.rotate(rot);
+    ctx.beginPath();ctx.arc(0,0,R,0,7);ctx.closePath();
+    ctx.shadowColor='rgba(0,0,0,.3)';ctx.shadowBlur=8;ctx.fillStyle='#fff';ctx.fill();ctx.shadowBlur=0;
+    ctx.save();ctx.clip();ctx.drawImage(face,-R,-R,R*2,R*2);ctx.restore();
+    ctx.lineWidth=3;ctx.strokeStyle='#fff';ctx.stroke();
+    ctx.restore();
+    // score
+    if(state==='play'||state==='dead'){
+      ctx.font='bold 48px system-ui,sans-serif';ctx.textAlign='center';
+      ctx.lineWidth=6;ctx.strokeStyle='#fff';ctx.strokeText(score,W/2,80);
+      ctx.fillStyle='#e8487a';ctx.fillText(score,W/2,80);
+    }
+    // message d'anniversaire à 10 points
+    if(bday>0){
+      ctx.globalAlpha=Math.min(1,bday/30);
+      ctx.fillStyle='rgba(232,72,122,.92)';
+      ctx.beginPath();ctx.roundRect?ctx.roundRect(30,H/2-120,W-60,70,16):ctx.rect(30,H/2-120,W-60,70);ctx.fill();
+      ctx.fillStyle='#fff';ctx.font='bold 20px system-ui,sans-serif';
+      ctx.fillText('🎉 Joyeux anniversaire '+name()+' ! 🎉',W/2,H/2-78);
+      ctx.globalAlpha=1;
+    }
+  }
+
+  function loop(t){
+    var k=lastT?Math.min(2,(t-lastT)/16.67):1;lastT=t;
+    if(state==='play')update(k);
+    draw();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
