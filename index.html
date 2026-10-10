@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>❤️❤️Zineb ❤️❤️Anniversaire</title>
+<title>Flappy Anniversaire</title>
 <style>
 :root{--bg:#fff4f7;--fg:#3a1f2b;--accent:#e8487a;--card:#ffffff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1117;--fg:#fbe6ee;--card:#2b1923}}
@@ -31,17 +31,18 @@ small{opacity:.7}
   <canvas id="c" width="400" height="600"></canvas>
 
   <div id="start" class="overlay">
-    <h1>🎂 zineeeb Anniversaire</h1>
+    <h1>🎂 Flappy Anniversaire</h1>
     <p>Pour Zineb ❤️</p>
-    <button id="play">Jouer</button>
-    <small>Clique, touche l'écran ou appuie sur Espace pour voler</small>
+    <button id="play">l3bii</button>
+    <small>kmli 10 awla wlh lachftih</small>
   </div>
 
   <div id="over" class="overlay hidden">
-    <h1 id="overTitle">Perdu !</h1>
+    <h1 id="overTitle">3yaaana</h1>
+    <p id="overSub"></p>
     <p id="overScore"></p>
     <p id="overMsg"></p>
-    <button id="retry">Rejouer</button>
+    <button id="retry">3aawdi</button>
   </div>
 </div>
 
@@ -64,7 +65,7 @@ small{opacity:.7}
   face=defaultFace();
 
   // === PHOTO : mets ton image dans le même dossier que ce fichier et appelle-la zineb.jpg ===
-  var PHOTO='zineb.png';
+  var PHOTO='zineb.jpg';
   var img=new Image();
   img.onload=function(){
     var sz=Math.min(img.width,img.height),c=document.createElement('canvas');c.width=c.height=160;
@@ -95,11 +96,12 @@ small{opacity:.7}
   function die(){
     state='dead';
     if(score>best){best=score;try{localStorage.setItem('flappy_best',String(best))}catch(e){}}
-    document.getElementById('overTitle').textContent=score>=10?'Bravo '+name()+' ! 🎉':'Perdu !';
+    document.getElementById('overTitle').textContent=score>=10?'Bravo '+name()+' ! 🎉':'3yaaana';
+    document.getElementById('overSub').textContent=score>=10?'':'lay3ti lmok s7a';
     document.getElementById('overScore').textContent='Score : '+score+'  ·  Record : '+best;
     document.getElementById('overMsg').textContent=score>=10
-      ?'Joyeux anniversaire '+name()+' ❤️ Tu es la meilleure !'
-      :'Atteins 10 points pour débloquer ton message d\'anniversaire 🎁';
+      ?'Joyeux anniversaire '+name()+' ❤️  I love u '
+      :'kmli ghi 10 b3da';
     setTimeout(function(){overEl.classList.remove('hidden')},500);
   }
 
